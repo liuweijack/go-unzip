@@ -2,15 +2,16 @@ package unzip
 
 import (
 	"archive/zip"
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
-	"io"
-	"fmt"
 	"strings"
+	"syscall"
 )
 
 type Unzip struct {
-	Src string
+	Src  string
 	Dest string
 }
 
@@ -31,8 +32,9 @@ func (uz Unzip) Extract() error {
 			panic(err)
 		}
 	}()
-
-	os.MkdirAll(uz.Dest, 0755)
+	mask := syscall.Umask(0)
+	defer syscall.Umask(mask)
+	os.MkdirAll(uz.Dest, 0777)
 
 	// Closure to address file descriptors issue with all the deferred .Close() methods
 	extractAndWriteFile := func(f *zip.File) error {
@@ -48,8 +50,8 @@ func (uz Unzip) Extract() error {
 
 		path := filepath.Join(uz.Dest, f.Name)
 		if !strings.HasPrefix(path, filepath.Clean(uz.Dest)+string(os.PathSeparator)) {
-            return fmt.Errorf("%s: Illegal file path", path)
-        }
+			return fmt.Errorf("%s: Illegal file path", path)
+		}
 
 		if f.FileInfo().IsDir() {
 			os.MkdirAll(path, f.Mode())
