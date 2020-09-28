@@ -54,9 +54,9 @@ func (uz Unzip) Extract() error {
 		}
 
 		if f.FileInfo().IsDir() {
-			os.MkdirAll(path, f.Mode())
+			os.MkdirAll(path, 0777)
 		} else {
-			os.MkdirAll(filepath.Dir(path), f.Mode())
+			os.MkdirAll(filepath.Dir(path), 0777)
 			f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
 			if err != nil {
 				return err
